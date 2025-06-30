@@ -13,6 +13,7 @@ import {
   fetchFeedOrderByNumber,
   selectFeedOrder
 } from '../../slices/feedSlices';
+import { Center } from '../center/center';
 
 export const OrderInfo: FC = () => {
   const { number } = useParams();

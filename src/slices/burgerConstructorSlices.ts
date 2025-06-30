@@ -39,12 +39,13 @@ export const createOrder = createAsyncThunk<
   { rejectValue: string }
 >(
   'burgerConstructor/createOrder',
-  async (ingredientIds, { rejectWithValue }) => {
+  async (ingredientIds, { dispatch, rejectWithValue }) => {
     try {
       const response = await orderBurgerApi(ingredientIds);
       if (!response.success) {
         throw new Error('Ошибка создания заказа');
       }
+      dispatch(clearConstructor());
       return { order: response.order };
     } catch (error) {
       return rejectWithValue(
