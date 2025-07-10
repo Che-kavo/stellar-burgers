@@ -1,0 +1,18 @@
+{
+  "success": true,
+  "name": "Краторный флюоробургер",
+  "order": {
+    "_id": "65ff9fa9abdee0001ceec111",
+    "status": "done",
+    "name": "Краторный флюоробургер",
+    "createdAt": "2025-07-03T10:30:00.000Z",
+    "updatedAt": "2025-07-03T10:30:10.000Z",
+    "number": 38483,
+    "ingredients": [
+      "643d69a5c3f7b9001cfa093c",
+      "643d69a5c3f7b9001cfa0941",
+      "643d69a5c3f7b9001cfa0945",
+      "643d69a5c3f7b9001cfa093c"
+    ]
+  }
+}
