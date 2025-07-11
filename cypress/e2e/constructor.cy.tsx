@@ -1,7 +1,23 @@
 /// <reference types="cypress" />
 
+import '../support/commands';
+
 describe("Тесты конструктора", () => {
-  const BASE_URL = "http://localhost:4000/";
+  const BUN_ID = "643d69a5c3f7b9001cfa093c";
+  const FILLING_ID = "643d69a5c3f7b9001cfa0941";
+
+  const SELECTORS = {
+    topBun: '[data-testid="top-bun"]',
+    bottomBun: '[data-testid="bottom-bun"]',
+    listFilling: '[data-testid="list-filling"]',
+    modal: '[data-testid="modal"]',
+    modalCloseBtn: '[data-testid="modal-close"]',
+    modalOverlay: '[data-testid="modal-overlay"]',
+    orderNumber: '[data-testid="orderNumber"]',
+    checkoutBtn: '[data-testid="checkout"]',
+    priceConstructor: '[data-testid="price-constructor"]'
+  };
+
   const API_INGREDIENTS = "**/ingredients";
   const API_AUTH_USER = "**/auth/user";
   const API_ORDERS = "**/orders";
@@ -16,12 +32,7 @@ describe("Тесты конструктора", () => {
       createdAt: "2025-07-03T10:30:00.000Z",
       updatedAt: "2025-07-03T10:30:10.000Z",
       number: 38483,
-      ingredients: [
-        "643d69a5c3f7b9001cfa093c",
-        "643d69a5c3f7b9001cfa0941",
-        "643d69a5c3f7b9001cfa0945",
-        "643d69a5c3f7b9001cfa093c"
-      ]
+      ingredients: [BUN_ID, FILLING_ID, "643d69a5c3f7b9001cfa0945", BUN_ID],
     }
   };
 
@@ -35,70 +46,67 @@ describe("Тесты конструктора", () => {
 
   beforeEach(() => {
     cy.intercept("GET", API_INGREDIENTS, { fixture: "ingredients.json" }).as("getIngredients");
-
-    cy.intercept("GET", API_AUTH_USER, {
-      statusCode: 200,
-      body: mockUserResponse
-    }).as("getUser");
-
-    cy.intercept("POST", API_ORDERS, {
-      statusCode: 200,
-      body: mockOrderResponse
-    }).as("postOrder");
+    cy.intercept("GET", API_AUTH_USER, { statusCode: 200, body: mockUserResponse }).as("getUser");
+    cy.intercept("POST", API_ORDERS, { statusCode: 200, body: mockOrderResponse }).as("postOrder");
 
     cy.setCookie("accessToken", "Bearer mock-access-token");
     window.localStorage.setItem("refreshToken", "mock-refresh-token");
 
-    cy.visit(BASE_URL);
+    cy.visit("/");
     cy.viewport(1440, 800);
     cy.wait("@getIngredients");
     cy.wait("@getUser");
   });
 
   it("Добавление булки и начинки в конструктор", () => {
-    cy.get('[data-testid="ingredient-643d69a5c3f7b9001cfa093c"]').find("button").click({ force: true });
-    cy.get('[data-testid="top-bun"]').should("contain.text", "Краторная булка N-200i");
-    cy.get('[data-testid="bottom-bun"]').should("contain.text", "Краторная булка N-200i");
+    cy.addIngredient(BUN_ID);
 
-    cy.get('[data-testid="ingredient-643d69a5c3f7b9001cfa0941"]').find("button").click({ force: true });
-    cy.get('[data-testid="list-filling"]').children().should("have.length.at.least", 1);
+    cy.get(SELECTORS.topBun).as("topBun");
+    cy.get(SELECTORS.bottomBun).as("bottomBun");
+
+    cy.get("@topBun").should("contain.text", "Краторная булка N-200i");
+    cy.get("@bottomBun").should("contain.text", "Краторная булка N-200i");
+
+    cy.addIngredient(FILLING_ID);
+
+    cy.get(SELECTORS.listFilling).children().should("have.length.at.least", 1);
   });
 
   describe("Модальное окно ингредиента", () => {
     beforeEach(() => {
-      cy.get('[data-testid="ingredient-643d69a5c3f7b9001cfa0941"]').scrollIntoView().click();
-      cy.get('[data-testid="modal"]').should("be.visible");
+      cy.openIngredientModal(FILLING_ID);
+      cy.get(SELECTORS.modal).as("modal");
     });
 
     it("закрывается по кнопке-крестику", () => {
-      cy.get('[data-testid="modal-close"]').click();
-      cy.get('[data-testid="modal"]').should("not.exist");
+      cy.get("@modal").should("be.visible");
+      cy.closeModalByButton();
+      cy.get("@modal").should("not.exist");
     });
 
     it("закрывается по клику на оверлей", () => {
-      cy.get('[data-testid="modal-overlay"]').click("topLeft", { force: true });
-      cy.get('[data-testid="modal"]').should("not.exist");
+      cy.get("@modal").should("be.visible");
+      cy.closeModalByOverlay();
+      cy.get("@modal").should("not.exist");
     });
   });
 
   it("Оформление заказа: создаётся заказ, открывается модалка с номером, конструктор очищается", () => {
-    cy.get('[data-testid="ingredient-643d69a5c3f7b9001cfa093c"]').find("button").click({ force: true });
-    cy.get('[data-testid="ingredient-643d69a5c3f7b9001cfa0941"]').find("button").click({ force: true });
+    cy.addIngredient(BUN_ID);
+    cy.addIngredient(FILLING_ID);
 
-    cy.get('[data-testid="checkout"]').click({ force: true });
-
+    cy.get(SELECTORS.checkoutBtn).click({ force: true });
     cy.wait("@postOrder").its("response.statusCode").should("eq", 200);
 
-    cy.get('[data-testid="modal"]', { timeout: 10000 }).should("be.visible");
-    cy.get('[data-testid="orderNumber"]').should("contain.text", mockOrderResponse.order.number.toString());
+    cy.get(SELECTORS.modal, { timeout: 10000 }).should("be.visible");
+    cy.get(SELECTORS.orderNumber).should("contain.text", mockOrderResponse.order.number.toString());
 
-    cy.get('[data-testid="modal-close"]').click();
-    cy.get('[data-testid="modal"]').should("not.exist");
+    cy.closeModalByButton();
 
-    cy.get('[data-testid="top-bun"]').should("not.exist");
-    cy.get('[data-testid="bottom-bun"]').should("not.exist");
+    cy.get(SELECTORS.topBun).should("not.exist");
+    cy.get(SELECTORS.bottomBun).should("not.exist");
 
-    cy.get('[data-testid="list-filling"]').then($el => {
+    cy.get(SELECTORS.listFilling).then($el => {
       if ($el.children().length === 1) {
         cy.wrap($el).contains('Выберите начинку').should('exist');
       } else {
@@ -106,6 +114,6 @@ describe("Тесты конструктора", () => {
       }
     });
 
-    cy.get('[data-testid="price-constructor"]').should("contain.text", "0");
+    cy.get(SELECTORS.priceConstructor).should("contain.text", "0");
   });
 });

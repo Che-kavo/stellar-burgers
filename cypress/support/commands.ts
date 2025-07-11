@@ -1,37 +1,33 @@
 /// <reference types="cypress" />
-// ***********************************************
-// This example commands.ts shows you how to
-// create various custom commands and overwrite
-// existing commands.
-//
-// For more comprehensive examples of custom
-// commands please read more here:
-// https://on.cypress.io/custom-commands
-// ***********************************************
-//
-//
-// -- This is a parent command --
-// Cypress.Commands.add('login', (email, password) => { ... })
-//
-//
-// -- This is a child command --
-// Cypress.Commands.add('drag', { prevSubject: 'element'}, (subject, options) => { ... })
-//
-//
-// -- This is a dual command --
-// Cypress.Commands.add('dismiss', { prevSubject: 'optional'}, (subject, options) => { ... })
-//
-//
-// -- This will overwrite an existing command --
-// Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
-//
-// declare global {
-//   namespace Cypress {
-//     interface Chainable {
-//       login(email: string, password: string): Chainable<void>
-//       drag(subject: string, options?: Partial<TypeOptions>): Chainable<Element>
-//       dismiss(subject: string, options?: Partial<TypeOptions>): Chainable<Element>
-//       visit(originalFn: CommandOriginalFn, url: string, options: Partial<VisitOptions>): Chainable<Element>
-//     }
-//   }
-// }
+
+Cypress.Commands.add('addIngredient', (id: string) => {
+  cy.get(`[data-testid="ingredient-${id}"]`).find("button").click({ force: true });
+});
+
+Cypress.Commands.add('openIngredientModal', (id: string) => {
+  cy.get(`[data-testid="ingredient-${id}"]`).scrollIntoView().click();
+  cy.get('[data-testid="modal"]').should('be.visible');
+});
+
+Cypress.Commands.add('closeModalByButton', () => {
+  cy.get('[data-testid="modal-close"]').click();
+  cy.get('[data-testid="modal"]').should('not.exist');
+});
+
+Cypress.Commands.add('closeModalByOverlay', () => {
+  cy.get('[data-testid="modal-overlay"]').click("topLeft", { force: true });
+  cy.get('[data-testid="modal"]').should('not.exist');
+});
+
+declare global {
+  namespace Cypress {
+    interface Chainable {
+      addIngredient(id: string): Chainable<void>;
+      openIngredientModal(id: string): Chainable<void>;
+      closeModalByButton(): Chainable<void>;
+      closeModalByOverlay(): Chainable<void>;
+    }
+  }
+}
+
+export {};
