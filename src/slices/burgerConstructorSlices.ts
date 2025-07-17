@@ -4,7 +4,7 @@ import {
   PayloadAction,
   createSelector
 } from '@reduxjs/toolkit';
-import { nanoid } from 'nanoid';
+import { nanoid } from 'nanoid/non-secure';
 import { TConstructorIngredient, TIngredient, TOrder } from '@utils-types';
 import { orderBurgerApi } from '@api';
 import { RootState } from '../services/store';
